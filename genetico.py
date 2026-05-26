@@ -2,43 +2,110 @@ import random
 
 from utils import (
     N,
-    fitness,
     calcular_conflitos,
     gerar_estado_aleatorio
 )
 
-
 # ==========================================
-# População inicial
+# CONFIGURAÇÕES OBRIGATÓRIAS
 # ==========================================
 
-def criar_populacao(tamanho_pop):
-
-    return [
-        gerar_estado_aleatorio()
-        for _ in range(tamanho_pop)
-    ]
+TAMANHO_POPULACAO = 20
+TAXA_CRUZAMENTO = 0.8
+TAXA_MUTACAO = 0.03
+MAX_GERACOES = 1000
 
 
 # ==========================================
-# Seleção
+# CONVERSÃO BINÁRIA
+# Cada rainha usa 3 bits (0-7)
+# ==========================================
+
+def estado_para_binario(estado):
+
+    binario = ""
+
+    for valor in estado:
+        binario += format(valor, "03b")
+
+    return binario
+
+
+def binario_para_estado(binario):
+
+    estado = []
+
+    for i in range(0, len(binario), 3):
+
+        bits = binario[i:i+3]
+
+        valor = int(bits, 2)
+
+        if valor > 7:
+            valor = 7
+
+        estado.append(valor)
+
+    return estado
+
+
+# ==========================================
+# FITNESS
+# Quanto menor conflito, melhor
+# ==========================================
+
+def fitness(estado):
+
+    conflitos = calcular_conflitos(estado)
+
+    max_conflitos = 28
+
+    return max_conflitos - conflitos
+
+
+# ==========================================
+# POPULAÇÃO INICIAL
+# ==========================================
+
+def criar_populacao():
+
+    populacao = []
+
+    for _ in range(TAMANHO_POPULACAO):
+
+        estado = gerar_estado_aleatorio()
+
+        individuo = estado_para_binario(estado)
+
+        populacao.append(individuo)
+
+    return populacao
+
+
+# ==========================================
+# SELEÇÃO POR ROLETA
 # ==========================================
 
 def selecionar_pais(populacao):
 
-    pesos = [
-        fitness(ind)
+    estados = [
+        binario_para_estado(ind)
         for ind in populacao
     ]
 
-    total = sum(pesos)
+    fitnesses = [
+        fitness(e)
+        for e in estados
+    ]
 
-    if total == 0:
+    soma = sum(fitnesses)
+
+    if soma == 0:
         return random.sample(populacao, 2)
 
     pais = random.choices(
         populacao,
-        weights=pesos,
+        weights=fitnesses,
         k=2
     )
 
@@ -46,96 +113,141 @@ def selecionar_pais(populacao):
 
 
 # ==========================================
-# Crossover
+# CROSSOVER DE PONTO DE CORTE
 # ==========================================
 
-def crossover(p1, p2):
+def crossover(pai1, pai2):
 
-    corte = random.randint(1, N - 2)
+    if random.random() > TAXA_CRUZAMENTO:
 
-    filho1 = p1[:corte] + p2[corte:]
-    filho2 = p2[:corte] + p1[corte:]
+        return pai1, pai2
+
+    ponto = random.randint(1, len(pai1) - 1)
+
+    filho1 = pai1[:ponto] + pai2[ponto:]
+    filho2 = pai2[:ponto] + pai1[ponto:]
 
     return filho1, filho2
 
 
 # ==========================================
-# Mutação
+# MUTAÇÃO BIT FLIP
 # ==========================================
 
-def mutacao(individuo, taxa_mutacao=0.1):
+def mutacao(individuo):
 
-    novo = individuo.copy()
+    individuo = list(individuo)
 
-    if random.random() < taxa_mutacao:
+    for i in range(len(individuo)):
 
-        col = random.randint(0, N - 1)
+        if random.random() < TAXA_MUTACAO:
 
-        novo[col] = random.randint(0, N - 1)
+            individuo[i] = (
+                "1"
+                if individuo[i] == "0"
+                else "0"
+            )
 
-    return novo
+    return "".join(individuo)
 
 
 # ==========================================
-# Algoritmo Genético
+# ELITISMO
+# Mantém melhores indivíduos
+# ==========================================
+
+def ordenar_populacao(populacao):
+
+    return sorted(
+        populacao,
+        key=lambda ind: fitness(
+            binario_para_estado(ind)
+        ),
+        reverse=True
+    )
+
+
+# ==========================================
+# ALGORITMO GENÉTICO
 # ==========================================
 
 def algoritmo_genetico(
-    tamanho_pop=50,
-    max_geracoes=300,
-    taxa_mutacao=0.15
+    max_geracoes=MAX_GERACOES
 ):
 
-    populacao = criar_populacao(tamanho_pop)
+    populacao = criar_populacao()
 
-    melhor_estado = None
-    melhor_h = float("inf")
+    melhor_individuo = None
+    melhor_fitness = -1
+
+    estado_inicial = binario_para_estado(
+        populacao[0]
+    )
 
     for geracao in range(max_geracoes):
 
-        for individuo in populacao:
+        populacao = ordenar_populacao(populacao)
 
-            h = calcular_conflitos(individuo)
+        elite = populacao[:2]
 
-            if h < melhor_h:
+        melhor_atual = elite[0]
 
-                melhor_h = h
-                melhor_estado = individuo
+        estado_melhor = binario_para_estado(
+            melhor_atual
+        )
 
-            if h == 0:
+        fitness_atual = fitness(estado_melhor)
 
-                return {
-                    "estado_inicial": populacao[0],
-                    "estado_final": individuo,
-                    "h_final": 0,
-                    "iteracoes": geracao,
-                    "movimentos_laterais": 0,
-                    "houve_otimo_local": False,
-                    "sucesso": True
-                }
+        if fitness_atual > melhor_fitness:
 
-        nova_populacao = []
+            melhor_fitness = fitness_atual
+            melhor_individuo = melhor_atual
 
-        while len(nova_populacao) < tamanho_pop:
+        if calcular_conflitos(estado_melhor) == 0:
+
+            return {
+                "estado_inicial": estado_inicial,
+                "estado_final": estado_melhor,
+                "h_final": 0,
+                "geracoes": geracao,
+                "sucesso": True,
+                "movimentos_laterais": None,
+                "houve_otimo_local": None
+            }
+
+        nova_populacao = elite.copy()
+
+        while len(nova_populacao) < TAMANHO_POPULACAO:
 
             pai1, pai2 = selecionar_pais(populacao)
 
-            filho1, filho2 = crossover(pai1, pai2)
+            filho1, filho2 = crossover(
+                pai1,
+                pai2
+            )
 
-            filho1 = mutacao(filho1, taxa_mutacao)
-            filho2 = mutacao(filho2, taxa_mutacao)
+            filho1 = mutacao(filho1)
+            filho2 = mutacao(filho2)
 
             nova_populacao.append(filho1)
-            nova_populacao.append(filho2)
+
+            if len(nova_populacao) < TAMANHO_POPULACAO:
+                nova_populacao.append(filho2)
 
         populacao = nova_populacao
 
+    melhor_estado = binario_para_estado(
+        melhor_individuo
+    )
+
     return {
-        "estado_inicial": populacao[0],
+        "estado_inicial": estado_inicial,
         "estado_final": melhor_estado,
-        "h_final": melhor_h,
+        "h_final": calcular_conflitos(
+            melhor_estado
+        ),
         "iteracoes": max_geracoes,
-        "movimentos_laterais": 0,
-        "houve_otimo_local": False,
-        "sucesso": False
+        "sucesso": False,
+        "movimentos_laterais": None,
+        "houve_otimo_local": None
     }

@@ -1,0 +1,171 @@
+{
+  "name": "trab2_IA",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8d247172-368f-4251-a8bf-ad7e75b70ba9",
+        "options": {}
+      },
+      "id": "891146df-47fe-4ede-a3c6-0aa1ad310a45",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "8d247172-368f-4251-a8bf-ad7e75b70ba9"
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "=num_execucoes",
+              "value": "={{ $json.body.num_execucoes }}"
+            },
+            {
+              "name": "=max_iter",
+              "value": "={{ $json.body.max_iter }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "=algoritmo",
+              "value": "={{$json.body.algoritmo}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d2349b7c-a2d4-4ba6-a05a-73f8e21b4e76",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/executar",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=max_iter",
+              "value": "={{ $json.max_iter }}"
+            },
+            {
+              "name": "=algoritmo",
+              "value": "={{ $json.algoritmo }}"
+            },
+            {
+              "name": "num_execucoes",
+              "value": "={{ $json.num_execucoes }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        0
+      ],
+      "id": "5bb0e7ea-fe98-4e1f-b2b6-a52c71fb5ae7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "resultado.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "811bfb76-08c5-4c78-9a5a-9bb49493adca",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "content-type": "application/json",
+            "user-agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; pt-BR) WindowsPowerShell/5.1.26100.8115",
+            "host": "localhost:5678",
+            "content-length": "69",
+            "connection": "Keep-Alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "num_execucoes": 50,
+            "max_iter": 1000,
+            "algoritmo": "genetico"
+          },
+          "webhookUrl": "http://localhost:5678/webhook-test/hill-climbing",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2ab545f7-a296-482e-b553-63f5ca9a211c",
+  "meta": {
+    "instanceId": "74108ecfe7c6671d3e061d22795f550d69a9217875bc8b5fce688567110b9810"
+  },
+  "id": "HDDSVK5vn5rn4DQN",
+  "tags": []
+}

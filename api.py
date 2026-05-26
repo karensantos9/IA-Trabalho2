@@ -59,11 +59,22 @@ def executar_algoritmo(
 @app.post("/executar")
 def executar(data: dict):
 
-    algoritmo = data.get("algoritmo", "grasp")
-
+    algoritmo = data.get("algoritmo", "genetico")
     max_iter = data.get("max_iter", 1000)
+    num_execucoes = data.get("num_execucoes", 50)
 
-    return executar_algoritmo(
-        algoritmo,
-        max_iter
-    )
+    resultados = []
+
+    for _ in range(num_execucoes):
+
+        resultado = executar_algoritmo(
+            algoritmo,
+            max_iter
+        )
+
+        resultados.append(resultado)
+
+    return {
+        "total_execucoes": num_execucoes,
+        "dados": resultados
+    }
