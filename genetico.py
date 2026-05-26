@@ -177,8 +177,13 @@ def algoritmo_genetico(
 
     populacao = criar_populacao()
 
-    melhor_individuo = None
-    melhor_fitness = -1
+    melhor_individuo = populacao[0]
+
+    melhor_fitness = fitness(
+        binario_para_estado(
+            melhor_individuo
+        )
+)
 
     estado_inicial = binario_para_estado(
         populacao[0]
@@ -209,10 +214,11 @@ def algoritmo_genetico(
                 "estado_inicial": estado_inicial,
                 "estado_final": estado_melhor,
                 "h_final": 0,
-                "geracoes": geracao,
+                "iteracoes": geracao,
                 "sucesso": True,
                 "movimentos_laterais": None,
-                "houve_otimo_local": None
+                "houve_otimo_local": None,
+                "fitness": melhor_fitness
             }
 
         nova_populacao = elite.copy()

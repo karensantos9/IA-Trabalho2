@@ -84,7 +84,7 @@
       "parameters": {
         "operation": "toJson",
         "options": {
-          "fileName": "resultado.json"
+          "fileName": "={{ $json.dados[0].algoritmo + \".json\" }}"
         }
       },
       "type": "n8n-nodes-base.convertToFile",
@@ -113,7 +113,7 @@
           "body": {
             "num_execucoes": 50,
             "max_iter": 1000,
-            "algoritmo": "genetico"
+            "algoritmo": "grasp"
           },
           "webhookUrl": "http://localhost:5678/webhook-test/hill-climbing",
           "executionMode": "test"
@@ -162,7 +162,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "2ab545f7-a296-482e-b553-63f5ca9a211c",
+  "versionId": "b2768cf2-75cd-46a0-b57f-c0be5549ba8b",
   "meta": {
     "instanceId": "74108ecfe7c6671d3e061d22795f550d69a9217875bc8b5fce688567110b9810"
   },

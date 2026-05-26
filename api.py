@@ -5,6 +5,7 @@ import time
 
 from grasp import grasp_8_rainhas
 from genetico import algoritmo_genetico
+from analise import gerar_estatisticas
 
 app = FastAPI()
 
@@ -74,7 +75,12 @@ def executar(data: dict):
 
         resultados.append(resultado)
 
+    estatisticas = gerar_estatisticas(resultados)
+
+    print(resultado)
+
     return {
         "total_execucoes": num_execucoes,
-        "dados": resultados
+        "dados": resultados,
+        "estatisticas": estatisticas
     }
